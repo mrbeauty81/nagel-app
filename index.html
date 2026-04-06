@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>MR BEAUTY</title>
+
+<link rel="apple-touch-icon" href="logo.PNG">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MR BEAUTY">
+
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+overflow:hidden;
+}
+
+/* TOP */
+.top{
+position:fixed;
+top:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:15px;
+z-index:1000;
+}
+
+/* CONTENT */
+.content{
+position:absolute;
+top:170px;
+bottom:170px;
+left:0;
+right:0;
+overflow-y:auto;
+padding:15px;
+}
+
+/* BOTTOM */
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:20px;
+}
+
+/* HEADER */
+.header{
+position:relative;
+height:50px;
+margin-bottom:10px;
+}
+
+.title{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+font-size:22px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+right:0;
+top:50%;
+transform:translateY(-50%);
+width:45px;
+}
+
+/* INPUT */
+.nameRow{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+.field{
+flex:1;
+padding:12px;
+border-radius:12px;
+border:none;
+background:#1c1c1f;
+color:white;
+}
+
+/* DROPDOWN */
+.dropdown{
+margin-top:10px;
+padding:12px;
+background:#1c1c1f;
+border-radius:12px;
+color:#aaa;
+}
+
+.dropdown.active{
+color:white;
+}
+
+.dropdownList{
+display:none;
+margin-top:6px;
+background:#1c1c1f;
+border-radius:12px;
+}
+
+.dropdownList div{
+padding:14px;
+border-bottom:1px solid #2a2a2a;
+}
+
+/* SERVICES */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.btn{
+background:#1c1c1f;
+padding:12px;
+border-radius:14px;
+text-align:center;
+white-space:pre-line;
+}
+
+.btn.active{
+background:#007aff;
+}
+
+/* TOTAL */
+.total{
+background:white;
+color:black;
+padding:20px;
+border-radius:18px;
+text-align:center;
+font-size:26px;
+font-weight:bold;
+}
+
+/* BUTTON */
+button{
+width:100%;
+padding:12px;
+border-radius:14px;
+border:none;
+margin-top:10px;
+background:#007aff;
+color:white;
+}
+
+button.green{
+background:#34c759;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 KASSE -->
+<div id="kasse">
+
+<div class="top">
+
+<div class="header">
+<div class="title">Kasse</div>
+<img src="logo.PNG" class="logo">
+</div>
+
+<div class="nameRow">
+<input id="vorname" class="field" placeholder="Vorname">
+<input id="nachname" class="field" placeholder="Nachname">
+</div>
+
+<div id="dropdown" class="dropdown" onclick="toggleDropdown()">
+<div id="selectedTarif">Tarif</div>
+</div>
+
+<div id="dropdownList" class="dropdownList">
+<div onclick="selectTarif('Standard')">Standard</div>
+<div onclick="selectTarif('Lehrling')">Lehrling</div>
+</div>
+
+</div>
+
+<div class="content">
+<div id="buttons" class="grid"></div>
+</div>
+
+<div class="bottom">
+<div id="total" class="total">CHF 0.00</div>
+<button onclick="copy()">Copy</button>
+<button class="green" onclick="showAnalyse()">Analyse</button>
+</div>
+
+</div>
+
+<!-- 📊 ANALYSE -->
+<div id="analyse" style="display:none; padding:15px;">
+
+<h2>Analyse 📊</h2>
+
+<div id="analyseContent"></div>
+
+<button onclick="showKasse()">← Zurück zur Kasse</button>
+
+</div>
+
+<script>
+
+let tarif=null;
+let selected=[];
+
+/* TARIF */
+function toggleDropdown(){
+let d=document.getElementById("dropdownList");
+d.style.display=d.style.display==="block"?"none":"block";
+}
+
+function selectTarif(t){
+tarif=t;
+document.getElementById("selectedTarif").innerText=t;
+document.getElementById("dropdownList").style.display="none";
+render();
+calc();
+}
+
+/* DATEN */
+const standard={
+"Farbe":10,"French":10,"Chrom":10,
+"Augenbrauen zupfen":15,"Augenbrauen färben":15
+};
+
+function getPreise(){
+return standard;
+}
+
+/* RENDER */
+function render(){
+let data=getPreise();
+let c=document.getElementById("buttons");
+c.innerHTML="";
+
+Object.keys(data).forEach(name=>{
+let d=document.createElement("div");
+d.className="btn";
+
+if(selected.includes(name)) d.classList.add("active");
+
+d.innerText=name+"\nCHF "+data[name];
+
+d.onclick=()=>{
+selected.includes(name)?
+selected=selected.filter(s=>s!==name):
+selected.push(name);
+render();
+calc();
+};
+
+c.appendChild(d);
+});
+}
+
+/* TOTAL */
+function calc(){
+let data=getPreise();
+let t=0;
+selected.forEach(s=>t+=data[s]);
+document.getElementById("total").innerText="CHF "+t.toFixed(2);
+}
+
+/* COPY + SAVE */
+function copy(){
+
+let vor=document.getElementById("vorname").value;
+let nach=document.getElementById("nachname").value;
+
+if(!vor||!nach||!tarif||selected.length===0){
+alert("Alles ausfüllen");
+return;
+}
+
+let total=0;
+let data=getPreise();
+selected.forEach(s=>total+=data[s]);
+
+let arr=JSON.parse(localStorage.getItem("sales")||"[]");
+
+arr.push({
+name:vor+" "+nach,
+services:selected,
+total,
+date:new Date().toISOString()
+});
+
+localStorage.setItem("sales",JSON.stringify(arr));
+
+alert("Gespeichert ✓");
+}
+
+/* SWITCH */
+function showAnalyse(){
+document.getElementById("kasse").style.display="none";
+document.getElementById("analyse").style.display="block";
+loadAnalyse();
+}
+
+function showKasse(){
+document.getElementById("analyse").style.display="none";
+document.getElementById("kasse").style.display="block";
+}
+
+/* ANALYSE */
+function loadAnalyse(){
+
+let data=JSON.parse(localStorage.getItem("sales")||"[]");
+
+let total=0;
+
+data.forEach(d=>total+=d.total);
+
+document.getElementById("analyseContent").innerHTML=`
+<div style="background:#1c1c1f;padding:15px;border-radius:15px;">
+Total: CHF ${total.toFixed(2)}
+</div>
+`;
+}
+
+render();
+calc();
+
+</script>
+
+</body>
+</html>
