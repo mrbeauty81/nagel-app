@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>MR Beauty</title>
+
+<link rel="apple-touch-icon" href="logo.PNG">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+}
+
+.top{
+position:sticky;
+top:0;
+background:#0b0b0c;
+padding:15px;
+z-index:1000;
+}
+
+.header{
+position:relative;
+display:flex;
+align-items:center;
+height:50px;
+margin-bottom:10px;
+}
+
+.title{
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+font-size:22px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+right:0;
+width:45px;
+height:45px;
+object-fit:contain;
+border-radius:12px;
+}
+
+.field{
+width:100%;
+padding:14px;
+margin:8px 0;
+border-radius:14px;
+border:none;
+background:#1c1c1f;
+color:white;
+font-size:16px;
+height:50px;
+box-sizing:border-box;
+}
+
+.content{
+padding:15px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.btn{
+background:#1c1c1f;
+padding:14px;
+border-radius:14px;
+text-align:center;
+cursor:pointer;
+white-space:pre-line;
+}
+
+.btn.active{
+background:#007aff;
+color:white;
+}
+
+.total{
+background:white;
+color:black;
+padding:22px;
+border-radius:20px;
+text-align:center;
+margin-top:15px;
+font-size:28px;
+font-weight:bold;
+}
+
+button{
+width:100%;
+padding:14px;
+border-radius:14px;
+border:none;
+margin-top:10px;
+background:#007aff;
+color:white;
+font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+
+<div class="header">
+<div class="title">Kasse</div>
+<img src="logo.PNG" class="logo">
+</div>
+
+<input id="kunde" class="field" placeholder="Kundenname">
+
+<select id="tarif" class="field">
+<option value="Standard">Standard</option>
+<option value="Lehrling">Lehrling</option>
+</select>
+
+</div>
+
+<div class="content">
+
+<div id="buttons" class="grid"></div>
+
+<div id="total" class="total">CHF 0.00</div>
+
+<button onclick="copy()">Copy für Worldline</button>
+
+</div>
+
+<script>
+
+// STANDARD PREISE
+const standard = {
+"Gel-Neumodellage mit Tips":65,
+"Gel-Neumodellage Naturnagel":55,
+"Auffüllen Natur":55,
+"Farbe":10,
+"French":10,
+"Chrom":10,
+"Reparatur pro Nagel":5,
+"Entfernen Gel/Acryl":30,
+"Augenbrauen zupfen":15,
+"Augenbrauen färben":15,
+"Wimpernlifting & färben":60,
+"Wimpernverlängerung Volumen":90,
+"Wimpern Volumen auffüllen":60,
+"Wimpernverlängerung Natur":80,
+"Wimpern Natur auffüllen":50,
+"Wimpern entfernen":20
+};
+
+// LEHRLING PREISE (inkl. dein Fix)
+const lehrling = {
+"Gel-Neumodellage mit Tips":55,
+"Gel-Neumodellage Naturnagel":45,
+"Auffüllen Natur":45, // 🔥 FIX
+"Wimpernverlängerung Volumen":80,
+"Wimpern Volumen auffüllen":50,
+"Wimpernverlängerung Natur":70,
+"Wimpern Natur auffüllen":50
+};
+
+// MERGE
+function getPreise(){
+let tarif = document.getElementById("tarif").value;
+if(tarif === "Standard") return standard;
+return {...standard, ...lehrling};
+}
+
+let selected = [];
+
+// RENDER
+function render(){
+let data = getPreise();
+let container = document.getElementById("buttons");
+container.innerHTML = "";
+
+Object.keys(data).forEach(name=>{
+let div = document.createElement("div");
+
+div.className = "btn";
+if(selected.includes(name)) div.classList.add("active");
+
+div.innerText = name + "\nCHF " + data[name];
+
+div.onclick = ()=>{
+if(selected.includes(name)){
+selected = selected.filter(s => s !== name);
+}else{
+selected.push(name);
+}
+render();
+calc();
+};
+
+container.appendChild(div);
+});
+}
+
+// CALC
+function calc(){
+let data = getPreise();
+let total = 0;
+
+selected.forEach(s=>{
+total += data[s] || 0;
+});
+
+document.getElementById("total").innerText = "CHF " + total.toFixed(2);
+}
+
+// COPY
+function copy(){
+let kunde = document.getElementById("kunde").value || "Ohne Name";
+let tarif = document.getElementById("tarif").value;
+
+let text = `${kunde}, ${tarif}, ${selected.join(", ")}`;
+navigator.clipboard.writeText(text);
+}
+
+// TARIF CHANGE
+document.getElementById("tarif").onchange = ()=>{
+render();
+calc();
+};
+
+// INIT
+render();
+calc();
+
+</script>
+
+</body>
+</html>
