@@ -4,25 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Nagel Studio</title>
-
-<!-- iPhone App Feeling -->
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Kasse</title>
 
 <style>
 body{font-family:-apple-system;background:#0b0b0c;color:white;padding:15px}
-.field{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;background:#1c1c1f;color:white}
-.service{background:#1c1c1f;padding:12px;border-radius:12px;margin:6px 0}
-.total{background:white;color:black;padding:20px;border-radius:20px;text-align:center;margin-top:10px;font-size:28px;font-weight:bold}
-button{width:100%;padding:14px;border-radius:12px;border:none;margin-top:10px}
-.copy{background:#007aff;color:white}
-.box{background:#1c1c1f;padding:15px;border-radius:15px;margin-top:10px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.btn{background:#1c1c1f;padding:12px;border-radius:12px;text-align:center;cursor:pointer}
-.btn:hover{background:#2c2c2e}
-h2{margin-top:20px}
+.field{width:100%;padding:16px;margin:8px 0;border-radius:14px;border:none;background:#1c1c1f;color:white;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn{
+background:#1c1c1f;
+padding:14px;
+border-radius:14px;
+text-align:center;
+cursor:pointer;
+transition:0.2s;
+}
+.btn.active{
+background:#007aff;
+color:white;
+}
+.total{
+background:white;
+color:black;
+padding:22px;
+border-radius:20px;
+text-align:center;
+margin-top:15px;
+font-size:28px;
+font-weight:bold;
+}
+button{
+width:100%;
+padding:14px;
+border-radius:14px;
+border:none;
+margin-top:10px;
+background:#007aff;
+color:white;
+font-size:16px;
+}
 </style>
 </head>
 
@@ -37,28 +56,22 @@ h2{margin-top:20px}
 <option value="Lehrling">Lehrling</option>
 </select>
 
-<!-- SERVICE BUTTONS -->
 <div id="buttons" class="grid"></div>
 
-<!-- AUSGEWÄHLTE SERVICES -->
-<div id="services"></div>
+<div id="total" class="total">CHF 0.00</div>
 
-<div class="total" id="total">CHF 0.00</div>
-
-<button class="copy" onclick="copy()">Copy für Worldline</button>
-
-<h2>Analyse 📊</h2>
-<div id="analyse"></div>
+<button onclick="copy()">Copy für Worldline</button>
 
 <script>
 
 // PREISE
-const preise = {
-Standard:{
+const standard = {
 "Gel-Neumodellage mit Tips":65,
 "Gel-Neumodellage Naturnagel":55,
 "Auffüllen Natur":55,
-"Farbe":10,"French":10,"Chrom":10,
+"Farbe":10,
+"French":10,
+"Chrom":10,
 "Reparatur pro Nagel":5,
 "Entfernen Gel/Acryl":30,
 "Augenbrauen zupfen":15,
@@ -69,33 +82,49 @@ Standard:{
 "Wimpernverlängerung Natur":80,
 "Wimpern Natur auffüllen":50,
 "Wimpern entfernen":20
-},
-Lehrling:{
+};
+
+const lehrling = {
 "Gel-Neumodellage mit Tips":55,
 "Gel-Neumodellage Naturnagel":45,
 "Wimpernverlängerung Volumen":80,
 "Wimpern Volumen auffüllen":50,
 "Wimpernverlängerung Natur":70,
-"Wimpern Natur auffüllen":50,
-"Wimpern entfernen":20
-}
+"Wimpern Natur auffüllen":50
 };
+
+// 👉 AUTOMATISCH MERGEN (fehlende Preise übernehmen)
+function getPreise(){
+let tarif=document.getElementById("tarif").value;
+
+if(tarif==="Standard") return standard;
+
+// Lehrling + Standard fallback
+return {...standard, ...lehrling};
+}
 
 let selected=[];
 
-// BUTTONS GENERIEREN
-function renderButtons(){
-let tarif=document.getElementById("tarif").value;
+// BUTTONS
+function render(){
+let data=getPreise();
 let container=document.getElementById("buttons");
 container.innerHTML="";
 
-Object.keys(preise[tarif]).forEach(name=>{
+Object.keys(data).forEach(name=>{
 let div=document.createElement("div");
+
 div.className="btn";
-div.innerText=name+" CHF "+preise[tarif][name];
+if(selected.includes(name)) div.classList.add("active");
+
+div.innerText=name+"\nCHF "+data[name];
 
 div.onclick=()=>{
+if(selected.includes(name)){
+selected=selected.filter(s=>s!==name);
+}else{
 selected.push(name);
+}
 render();
 calc();
 };
@@ -104,37 +133,12 @@ container.appendChild(div);
 });
 }
 
-// SERVICES ANZEIGE
-function render(){
-let c=document.getElementById("services");
-c.innerHTML="";
-
-let tarif=document.getElementById("tarif").value;
-
-selected.forEach((s,i)=>{
-let div=document.createElement("div");
-div.className="service";
-div.innerHTML=`
-${s} - CHF ${preise[tarif][s]}
-<span style="float:right;color:red;cursor:pointer" onclick="remove(${i})">✕</span>
-`;
-c.appendChild(div);
-});
-}
-
-// REMOVE
-function remove(i){
-selected.splice(i,1);
-render();
-calc();
-}
-
 // CALC
 function calc(){
-let tarif=document.getElementById("tarif").value;
+let data=getPreise();
 let total=0;
 
-selected.forEach(s=>total+=preise[tarif][s]);
+selected.forEach(s=>total+=data[s]);
 
 document.getElementById("total").innerText="CHF "+total.toFixed(2);
 }
@@ -147,61 +151,6 @@ let total=document.getElementById("total").innerText;
 
 let text=`${kunde}, ${tarif}, ${selected.join(", ")}, ${total}`;
 navigator.clipboard.writeText(text);
-
-save(kunde,tarif);
-}
-
-// SAVE
-function save(kunde,tarif){
-let total=0;
-selected.forEach(s=>total+=preise[tarif][s]);
-
-let data=JSON.parse(localStorage.getItem("data")||"[]");
-
-data.push({
-kunde,tarif,services:[...selected],total,date:new Date().toISOString()
-});
-
-localStorage.setItem("data",JSON.stringify(data));
-
-analyse();
-}
-
-// ANALYSE
-function analyse(){
-let data=JSON.parse(localStorage.getItem("data")||"[]");
-
-let total=0,todayTotal=0,monthTotal=0;
-let now=new Date();
-let today=now.toDateString();
-
-let count={};
-
-data.forEach(d=>{
-total+=d.total;
-let dDate=new Date(d.date);
-
-if(dDate.toDateString()===today) todayTotal+=d.total;
-if(dDate.getMonth()===now.getMonth()) monthTotal+=d.total;
-
-d.services.forEach(s=>{
-count[s]=(count[s]||0)+1;
-});
-});
-
-let top=Object.entries(count)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,3)
-.map(s=>`${s[0]} (${s[1]}x)`)
-.join("<br>");
-
-document.getElementById("analyse").innerHTML=`
-<div class="box">Heute: CHF ${todayTotal.toFixed(2)}</div>
-<div class="box">Monat: CHF ${monthTotal.toFixed(2)}</div>
-<div class="box">Total: CHF ${total.toFixed(2)}</div>
-<div class="box">Kunden: ${data.length}</div>
-<div class="box">Top Services:<br>${top||"Keine Daten"}</div>
-`;
 }
 
 // TARIF CHANGE
@@ -209,14 +158,11 @@ document.getElementById("tarif").onchange=()=>{
 selected=[];
 render();
 calc();
-renderButtons();
 };
 
 // INIT
-renderButtons();
 render();
 calc();
-analyse();
 
 </script>
 
