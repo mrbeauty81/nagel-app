@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>MR Beauty</title>
+
+<link rel="apple-touch-icon" href="logo.PNG">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+overflow:hidden;
+}
+
+/* TOP */
+.top{
+position:fixed;
+top:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:15px;
+z-index:1000;
+}
+
+/* BOTTOM */
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:15px;
+z-index:1000;
+}
+
+/* CONTENT */
+.content{
+position:absolute;
+top:210px;
+bottom:160px;
+left:0;
+right:0;
+overflow-y:auto;
+padding:15px;
+}
+
+/* HEADER */
+.header{
+position:relative;
+height:50px;
+margin-bottom:10px;
+}
+
+/* 👉 FIX: EXAKT AUF LOGO-HÖHE */
+.title{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%, -50%);
+font-size:22px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+right:0;
+top:50%;
+transform:translateY(-50%);
+width:45px;
+height:45px;
+object-fit:contain;
+border-radius:12px;
+}
+
+/* INPUT */
+.field{
+width:100%;
+padding:14px;
+margin:8px 0;
+border-radius:14px;
+border:none;
+background:#1c1c1f;
+color:white;
+font-size:16px;
+height:50px;
+box-sizing:border-box;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+/* BUTTON */
+.btn{
+background:#1c1c1f;
+padding:14px;
+border-radius:14px;
+text-align:center;
+cursor:pointer;
+white-space:pre-line;
+}
+
+.btn.active{
+background:#007aff;
+color:white;
+}
+
+/* TOTAL */
+.total{
+background:white;
+color:black;
+padding:20px;
+border-radius:18px;
+text-align:center;
+font-size:26px;
+font-weight:bold;
+}
+
+/* COPY */
+button{
+width:100%;
+padding:14px;
+border-radius:14px;
+border:none;
+margin-top:10px;
+background:#007aff;
+color:white;
+font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+
+<div class="header">
+<div class="title">Kasse</div>
+<img src="logo.PNG" class="logo">
+</div>
+
+<input id="kunde" class="field" placeholder="Vorname Name">
+
+<select id="tarif" class="field">
+<option value="Standard">Standard</option>
+<option value="Lehrling">Lehrling</option>
+</select>
+
+</div>
+
+<div class="content">
+<div id="buttons" class="grid"></div>
+</div>
+
+<div class="bottom">
+<div id="total" class="total">CHF 0.00</div>
+<button onclick="copy()">Copy für Worldline</button>
+</div>
+
+<script>
+
+// PREISE
+const standard = {
+"Gel-Neumodellage mit Tips":65,
+"Gel-Neumodellage Naturnagel":55,
+"Auffüllen Natur":55,
+"Farbe":10,
+"French":10,
+"Chrom":10,
+"Reparatur pro Nagel":5,
+"Entfernen Gel/Acryl":30,
+"Augenbrauen zupfen":15,
+"Augenbrauen färben":15,
+"Wimpernlifting & färben":60,
+"Wimpernverlängerung Volumen":90,
+"Wimpern Volumen auffüllen":60,
+"Wimpernverlängerung Natur":80,
+"Wimpern Natur auffüllen":50,
+"Wimpern entfernen":20
+};
+
+const lehrling = {
+"Gel-Neumodellage mit Tips":55,
+"Gel-Neumodellage Naturnagel":45,
+"Auffüllen Natur":45,
+"Wimpernverlängerung Volumen":80,
+"Wimpern Volumen auffüllen":50,
+"Wimpernverlängerung Natur":70,
+"Wimpern Natur auffüllen":50
+};
+
+// NUMMERN
+const nummernStandard = {
+"Gel-Neumodellage mit Tips":1,
+"Gel-Neumodellage Naturnagel":2,
+"Auffüllen Natur":3,
+"Farbe":4,
+"French":5,
+"Chrom":6,
+"Reparatur pro Nagel":7,
+"Entfernen Gel/Acryl":8,
+"Augenbrauen zupfen":9,
+"Augenbrauen färben":10,
+"Wimpernlifting & färben":11,
+"Wimpernverlängerung Volumen":12,
+"Wimpern Volumen auffüllen":13,
+"Wimpernverlängerung Natur":14,
+"Wimpern Natur auffüllen":15,
+"Wimpern entfernen":16
+};
+
+const nummernLehrling = {
+"Gel-Neumodellage mit Tips":17,
+"Gel-Neumodellage Naturnagel":18,
+"Auffüllen Natur":19,
+"Wimpernverlängerung Volumen":20,
+"Wimpern Volumen auffüllen":21,
+"Wimpernverlängerung Natur":22,
+"Wimpern Natur auffüllen":23,
+"Wimpern entfernen":24
+};
+
+function getPreise(){
+let tarif = document.getElementById("tarif").value;
+if(tarif === "Standard") return standard;
+return {...standard, ...lehrling};
+}
+
+let selected = [];
+
+// RENDER
+function render(){
+let data = getPreise();
+let container = document.getElementById("buttons");
+container.innerHTML = "";
+
+Object.keys(data).forEach(name=>{
+let div = document.createElement("div");
+
+div.className = "btn";
+if(selected.includes(name)) div.classList.add("active");
+
+div.innerText = name + "\nCHF " + data[name];
+
+div.onclick = ()=>{
+if(selected.includes(name)){
+selected = selected.filter(s => s !== name);
+}else{
+selected.push(name);
+}
+render();
+calc();
+};
+
+container.appendChild(div);
+});
+}
+
+// CALC
+function calc(){
+let data = getPreise();
+let total = 0;
+
+selected.forEach(s=>{
+total += data[s] || 0;
+});
+
+document.getElementById("total").innerText = "CHF " + total.toFixed(2);
+}
+
+// 🔥 COPY (SORTIERT!)
+function copy(){
+let kunde = document.getElementById("kunde").value || "Kunde";
+let tarif = document.getElementById("tarif").value;
+
+let tarifKurz = tarif === "Standard" ? "S" : "L";
+
+let map = tarif === "Standard" ? nummernStandard : nummernLehrling;
+
+// 👉 SORTIERUNG
+let nums = selected
+.map(s => map[s] || nummernStandard[s])
+.filter(n => n)
+.sort((a,b) => a-b); // 🔥 FIX
+
+let text = `${kunde}, ${tarifKurz}, ${nums.join("+")}`;
+
+text = text.substring(0,30);
+
+navigator.clipboard.writeText(text);
+}
+
+// TARIF CHANGE
+document.getElementById("tarif").onchange = ()=>{
+render();
+calc();
+};
+
+// INIT
+render();
+calc();
+
+</script>
+
+</body>
+</html>
