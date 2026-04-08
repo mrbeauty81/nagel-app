@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Termine</title>
+
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+overflow:hidden;
+}
+
+/* TOP */
+.top{
+position:fixed;
+top:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:15px;
+z-index:1000;
+}
+
+/* CONTENT */
+.content{
+position:absolute;
+top:170px;
+bottom:120px;
+left:0;
+right:0;
+overflow-y:auto;
+padding:15px;
+}
+
+/* BOTTOM */
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#0b0b0c;
+padding:15px;
+}
+
+/* HEADER */
+.header{
+position:relative;
+height:50px;
+margin-bottom:10px;
+}
+
+.title{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+font-size:22px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+right:0;
+top:50%;
+transform:translateY(-50%);
+height:45px;
+}
+
+/* NAME */
+.nameRow{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+.field{
+flex:1;
+padding:12px;
+border-radius:12px;
+border:none;
+background:#1c1c1f;
+color:white;
+font-size:17px;
+height:46px;
+box-sizing:border-box;
+}
+
+/* DATE */
+.dateRow{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
+/* BUTTON */
+.btn{
+background:#1c1c1f;
+padding:14px;
+border-radius:14px;
+text-align:center;
+}
+
+.btn.active{
+background:#007aff;
+}
+
+/* SAVE */
+button{
+width:100%;
+padding:16px;
+border-radius:14px;
+border:none;
+background:#34c759;
+color:white;
+font-size:17px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOP -->
+<div class="top">
+
+<div class="header">
+<div class="title">Termin</div>
+<img src="logo.PNG" class="logo">
+</div>
+
+<div class="nameRow">
+<input id="vorname" class="field" placeholder="Vorname">
+<input id="nachname" class="field" placeholder="Nachname">
+</div>
+
+<div class="dateRow">
+<input id="datum" class="field" type="date">
+<input id="zeit" class="field" type="time">
+</div>
+
+</div>
+
+<!-- SERVICES -->
+<div class="content">
+<div id="buttons" class="grid"></div>
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom">
+<button onclick="save()">Termin speichern</button>
+</div>
+
+<script>
+
+const services = [
+"Gel-Neumodellage mit Tips",
+"Gel-Neumodellage Naturnagel",
+"Auffüllen Natur",
+"Farbe",
+"French",
+"Chrom",
+"Reparatur pro Nagel",
+"Entfernen Gel/Acryl",
+"Augenbrauen zupfen",
+"Augenbrauen färben",
+"Wimpernlifting & färben",
+"Wimpernverlängerung Volumen",
+"Wimpern Volumen auffüllen",
+"Wimpernverlängerung Natur",
+"Wimpern Natur auffüllen",
+"Wimpern entfernen"
+];
+
+let selected=[];
+
+function render(){
+
+let c=document.getElementById("buttons");
+c.innerHTML="";
+
+services.forEach(name=>{
+
+let d=document.createElement("div");
+d.className="btn";
+
+if(selected.includes(name)) d.classList.add("active");
+
+d.innerText=name;
+
+d.onclick=()=>{
+selected.includes(name)?
+selected=selected.filter(s=>s!==name):
+selected.push(name);
+
+render();
+};
+
+c.appendChild(d);
+
+});
+}
+
+function save(){
+
+let vor=document.getElementById("vorname").value.trim();
+let nach=document.getElementById("nachname").value.trim();
+let datum=document.getElementById("datum").value;
+let zeit=document.getElementById("zeit").value;
+
+if(!vor || !nach || !datum || !zeit || selected.length===0){
+return;
+}
+
+let termine = JSON.parse(localStorage.getItem("termine")||"[]");
+
+termine.push({
+vor,
+nach,
+datum,
+zeit,
+dienst:selected
+});
+
+localStorage.setItem("termine",JSON.stringify(termine));
+
+selected=[];
+render();
+
+document.getElementById("vorname").value="";
+document.getElementById("nachname").value="";
+document.getElementById("datum").value="";
+document.getElementById("zeit").value="";
+
+alert("Termin gespeichert");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
