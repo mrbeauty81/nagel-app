@@ -2,374 +2,151 @@
 <html>
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Kasse</title>
+<title>Analyse</title>
 
-<link rel="apple-touch-icon" href="logo.PNG">
-
+<link rel="apple-touch-icon" href="../logo.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kasse">
+<meta name="apple-mobile-web-app-title" content="Analyse">
 
 <style>
 body{
-font-family:-apple-system;
-background:#0b0b0c;
-color:white;
-margin:0;
-overflow:hidden;
+  font-family:-apple-system;
+  background:#0b0b0c;
+  color:white;
+  margin:0;
+  padding:15px;
 }
 
-/* TOP */
-.top{
-position:fixed;
-top:0;
-left:0;
-right:0;
-background:#0b0b0c;
-padding:15px;
-z-index:1000;
-}
-
-/* CONTENT */
-.content{
-position:absolute;
-top:170px;
-bottom:170px;
-left:0;
-right:0;
-overflow-y:auto;
-padding:15px;
-}
-
-/* BOTTOM */
-.bottom{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:#0b0b0c;
-padding:20px 20px 26px 20px;
-}
-
-/* HEADER */
 .header{
-position:relative;
-height:50px;
-margin-bottom:10px;
+  position:relative;
+  height:60px;
+  margin-bottom:10px;
 }
 
 .title{
-position:absolute;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-font-size:22px;
-font-weight:bold;
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:22px;
+  font-weight:bold;
 }
 
 .logo{
-position:absolute;
-right:0;
-top:50%;
-transform:translateY(-50%);
-width:45px;
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:45px;
 }
 
-/* NAME */
-.nameRow{
-display:flex;
-gap:10px;
-margin-top:10px;
+.box{
+  background:#1c1c1f;
+  padding:15px;
+  border-radius:15px;
+  margin-top:10px;
 }
 
-.nameRow .field{
-flex:1;
-}
-
-/* INPUT */
-.field{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:none;
-background:#1c1c1f;
-color:white;
-font-size:17px;
-height:46px;
-box-sizing:border-box;
-}
-
-/* DROPDOWN */
-.dropdown{
-margin-top:10px;
-padding:12px;
-background:#1c1c1f;
-border-radius:12px;
-font-size:17px;
-color:#aaa;
-}
-
-.dropdown.active{
-color:white;
-}
-
-.dropdownList{
-display:none;
-margin-top:6px;
-background:#1c1c1f;
-border-radius:12px;
-overflow:hidden;
-}
-
-.dropdownList div{
-padding:14px;
-border-bottom:1px solid #2a2a2a;
-}
-
-.dropdownList div:last-child{
-border:none;
-}
-
-/* SERVICES */
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-align-content:start;
-}
-
-.btn{
-background:#1c1c1f;
-padding:12px;
-border-radius:14px;
-text-align:center;
-white-space:pre-line;
-}
-
-.btn.active{
-background:#007aff;
-}
-
-/* TOTAL */
-.total{
-background:white;
-color:black;
-padding:20px;
-border-radius:18px;
-text-align:center;
-font-size:26px;
-font-weight:bold;
-}
-
-/* BUTTON */
-button{
-width:100%;
-padding:12px;
-border-radius:14px;
-border:none;
-margin-top:10px;
-background:#007aff;
-color:white;
-font-size:16px;
-transition:0.3s;
-}
-
-button.success{
-background:#34c759;
-}
-
-button:disabled{
-opacity:0.6;
+.smallTitle{
+  font-weight:bold;
+  margin-bottom:8px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="top">
-
 <div class="header">
-<div class="title">Kasse</div>
-<img src="logo.PNG" class="logo">
+  <div class="title">Analyse 📊</div>
+  <img src="../logo.PNG" class="logo">
 </div>
 
-<div class="nameRow">
-<input id="vorname" class="field" placeholder="Vorname" oninput="resetCopy()">
-<input id="nachname" class="field" placeholder="Nachname" oninput="resetCopy()">
-</div>
-
-<div id="dropdown" class="dropdown" onclick="toggleDropdown()">
-<div id="selectedTarif">Tarif</div>
-</div>
-
-<div id="dropdownList" class="dropdownList">
-<div onclick="selectTarif('Standard')">Standard</div>
-<div onclick="selectTarif('Lehrling')">Lehrling</div>
-</div>
-
-</div>
-
-<div class="content">
-<div id="buttons" class="grid"></div>
-</div>
-
-<div class="bottom">
-<div id="total" class="total">CHF 0.00</div>
-<button id="copyBtn" onclick="copy()">Copy</button>
-</div>
+<div id="out"></div>
 
 <script>
+let data = JSON.parse(localStorage.getItem("sales") || "[]");
 
-let tarif=null;
-let copied=false;
+let now = new Date();
+let todayTotal = 0;
+let weekTotal = 0;
+let monthTotal = 0;
+let yearTotal = 0;
+let totalTotal = 0;
 
-function resetCopy(){
-if(copied){
-let btn=document.getElementById("copyBtn");
-btn.disabled=false;
-btn.classList.remove("success");
-btn.innerText="Copy";
-copied=false;
-}
-}
+let serviceCount = {};
+let customerTotal = {};
 
-function toggleDropdown(){
-let d=document.getElementById("dropdownList");
-d.style.display=d.style.display==="block"?"none":"block";
-}
+data.forEach(entry => {
+  let d = new Date(entry.date);
+  totalTotal += entry.total;
 
-function selectTarif(t){
-tarif=t;
-document.getElementById("selectedTarif").innerText=t;
-document.getElementById("dropdownList").style.display="none";
-document.getElementById("dropdown").classList.add("active");
-render();
-calc();
-resetCopy();
-}
+  if(d.toDateString() === now.toDateString()){
+    todayTotal += entry.total;
+  }
 
-const standard={
-"Gel-Neumodellage mit Tips":65,
-"Gel-Neumodellage Naturnagel":55,
-"Auffüllen Natur":55,
-"Farbe":10,
-"French":10,
-"Chrom":10,
-"Reparatur pro Nagel":5,
-"Entfernen Gel/Acryl":30,
-"Augenbrauen zupfen":15,
-"Augenbrauen färben":15,
-"Wimpernlifting & färben":60,
-"Wimpernverlängerung Volumen":90,
-"Wimpern Volumen auffüllen":60,
-"Wimpernverlängerung Natur":80,
-"Wimpern Natur auffüllen":50,
-"Wimpern entfernen":20
-};
+  let diffDays = (now - d) / (1000 * 60 * 60 * 24);
+  if(diffDays <= 7){
+    weekTotal += entry.total;
+  }
 
-const lehrling={
-"Gel-Neumodellage mit Tips":55,
-"Gel-Neumodellage Naturnagel":45,
-"Auffüllen Natur":45,
-"Wimpernverlängerung Volumen":80,
-"Wimpern Volumen auffüllen":50,
-"Wimpernverlängerung Natur":70,
-"Wimpern Natur auffüllen":50
-};
+  if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()){
+    monthTotal += entry.total;
+  }
 
-const nummern={
-"Gel-Neumodellage mit Tips":1,
-"Gel-Neumodellage Naturnagel":2,
-"Auffüllen Natur":3,
-"Farbe":4,
-"French":5,
-"Chrom":6,
-"Reparatur pro Nagel":7,
-"Entfernen Gel/Acryl":8,
-"Augenbrauen zupfen":9,
-"Augenbrauen färben":10,
-"Wimpernlifting & färben":11,
-"Wimpernverlängerung Volumen":12,
-"Wimpern Volumen auffüllen":13,
-"Wimpernverlängerung Natur":14,
-"Wimpern Natur auffüllen":15,
-"Wimpern entfernen":16
-};
+  if(d.getFullYear() === now.getFullYear()){
+    yearTotal += entry.total;
+  }
 
-let selected=[];
+  if(entry.services){
+    entry.services.forEach(s => {
+      serviceCount[s] = (serviceCount[s] || 0) + 1;
+    });
+  }
 
-function getPreise(){
-if(tarif==="Lehrling") return {...standard,...lehrling};
-return standard;
-}
-
-function render(){
-let data=getPreise();
-let c=document.getElementById("buttons");
-c.innerHTML="";
-
-Object.keys(data).forEach(name=>{
-let d=document.createElement("div");
-
-d.className="btn";
-if(selected.includes(name)) d.classList.add("active");
-
-d.innerText=name+"\nCHF "+data[name];
-
-d.onclick=()=>{
-selected.includes(name)?
-selected=selected.filter(s=>s!==name):
-selected.push(name);
-render();
-calc();
-resetCopy();
-};
-
-c.appendChild(d);
+  if(entry.name){
+    customerTotal[entry.name] = (customerTotal[entry.name] || 0) + entry.total;
+  }
 });
-}
 
-function calc(){
-let data=getPreise();
-let t=0;
-selected.forEach(s=>t+=data[s]||0);
-document.getElementById("total").innerText="CHF "+t.toFixed(2);
-}
+let topServices = Object.entries(serviceCount)
+  .sort((a,b) => b[1] - a[1])
+  .slice(0,5);
 
-function copy(){
+let topCustomers = Object.entries(customerTotal)
+  .sort((a,b) => b[1] - a[1])
+  .slice(0,10);
 
-let vor=document.getElementById("vorname").value.trim();
-let nach=document.getElementById("nachname").value.trim();
+document.getElementById("out").innerHTML = `
+  <div class="box">Heute: CHF ${todayTotal.toFixed(2)}</div>
+  <div class="box">Woche: CHF ${weekTotal.toFixed(2)}</div>
+  <div class="box">Monat: CHF ${monthTotal.toFixed(2)}</div>
+  <div class="box">Jahr: CHF ${yearTotal.toFixed(2)}</div>
+  <div class="box">Total: CHF ${totalTotal.toFixed(2)}</div>
 
-if(!vor){ alert("Bitte Vorname eingeben"); return; }
-if(!nach){ alert("Bitte Nachname eingeben"); return; }
-if(!tarif){ alert("Bitte Tarif auswählen"); return; }
-if(selected.length===0){ alert("Bitte mindestens eine Dienstleistung wählen"); return; }
+  <div class="box">
+    <div class="smallTitle">Top 5 Dienstleistungen</div>
+    ${topServices.length ? topServices.map(s => `${s[0]} (${s[1]}x)`).join("<br>") : "Noch keine Daten"}
+  </div>
 
-let name=`${vor} ${nach}`;
-let tarifKurz=tarif==="Standard"?"S":"L";
+  <div class="box">
+    <div class="smallTitle">Top 10 Kundinnen</div>
+    ${topCustomers.length ? topCustomers.map(c => `${c[0]} — CHF ${c[1].toFixed(2)}`).join("<br>") : "Noch keine Daten"}
+  </div>
 
-let nums=selected.map(s=>nummern[s]).sort((a,b)=>a-b);
-
-let text=`${name}, ${tarifKurz}, ${nums.join("+")}`;
-text=text.substring(0,30);
-
-navigator.clipboard.writeText(text);
-
-let btn=document.getElementById("copyBtn");
-btn.classList.add("success");
-btn.innerText="Kopiert ✓";
-btn.disabled=true;
-
-copied=true;
-}
-
-render();
-calc();
-
+  <div class="box">
+    <div class="smallTitle">Alle Einträge</div>
+    ${data.length ? data.slice().reverse().map(entry => `
+      <div style="margin-bottom:14px;">
+        ${new Date(entry.date).toLocaleDateString()}<br>
+        ${entry.name || "-"}<br>
+        ${(entry.services || []).join(", ")}<br>
+        CHF ${Number(entry.total || 0).toFixed(2)}
+      </div>
+    `).join("") : "Noch keine Daten"}
+  </div>
+`;
 </script>
 
 </body>
