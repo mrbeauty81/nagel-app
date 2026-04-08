@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Analyse</title>
+
+<link rel="apple-touch-icon" href="../logo.PNG">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Analyse">
+
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+padding:15px;
+}
+
+/* HEADER */
+.header{
+position:relative;
+height:60px;
+margin-bottom:10px;
+}
+
+.title{
+position:absolute;
+left:0;
+top:50%;
+transform:translateY(-50%);
+font-size:22px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+right:0;
+top:50%;
+transform:translateY(-50%);
+width:45px;
+}
+
+/* BOXEN */
+.box{
+background:#1c1c1f;
+padding:15px;
+border-radius:15px;
+margin-top:10px;
+}
+
+.smallTitle{
+font-weight:bold;
+margin-bottom:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="title">Analyse 📊</div>
+<img src="../logo.PNG" class="logo">
+</div>
+
+<div id="out"></div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("sales") || "[]");
+
+let now = new Date();
+
+let today = 0;
+let week = 0;
+let month = 0;
+let year = 0;
+let total = 0;
+
+let services = {};
+let customers = {};
+
+data.forEach(entry => {
+
+let d = new Date(entry.date);
+
+total += entry.total;
+
+// HEUTE
+if(d.toDateString() === now.toDateString()){
+today += entry.total;
+}
+
+// WOCHE
+let diff = (now - d) / (1000*60*60*24);
+if(diff <= 7){
+week += entry.total;
+}
+
+// MONAT
+if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()){
+month += entry.total;
+}
+
+// JAHR
+if(d.getFullYear() === now.getFullYear()){
+year += entry.total;
+}
+
+// SERVICES
+if(entry.services){
+entry.services.forEach(s=>{
+services[s] = (services[s] || 0) + 1;
+});
+}
+
+// KUNDEN
+if(entry.name){
+customers[entry.name] = (customers[entry.name] || 0) + entry.total;
+}
+
+});
+
+// TOP SERVICES
+let topServices = Object.entries(services)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,5);
+
+// TOP KUNDEN
+let topCustomers = Object.entries(customers)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,10);
+
+// UI
+document.getElementById("out").innerHTML = `
+<div class="box">Heute: CHF ${today.toFixed(2)}</div>
+<div class="box">Woche: CHF ${week.toFixed(2)}</div>
+<div class="box">Monat: CHF ${month.toFixed(2)}</div>
+<div class="box">Jahr: CHF ${year.toFixed(2)}</div>
+<div class="box">Total: CHF ${total.toFixed(2)}</div>
+
+<div class="box">
+<div class="smallTitle">Top Dienstleistungen</div>
+${topServices.length ? topServices.map(s=>`${s[0]} (${s[1]}x)`).join("<br>") : "Keine Daten"}
+</div>
+
+<div class="box">
+<div class="smallTitle">Top Kundinnen</div>
+${topCustomers.length ? topCustomers.map(c=>`${c[0]} — CHF ${c[1].toFixed(2)}`).join("<br>") : "Keine Daten"}
+</div>
+
+<div class="box">
+<div class="smallTitle">Alle Einträge</div>
+${data.length ? data.slice().reverse().map(e=>`
+<div style="margin-bottom:12px;">
+${new Date(e.date).toLocaleDateString()}<br>
+${e.name}<br>
+${e.services.join(", ")}<br>
+CHF ${e.total.toFixed(2)}
+</div>
+`).join("") : "Keine Einträge"}
+</div>
+`;
+
+</script>
+
+</body>
+</html>
