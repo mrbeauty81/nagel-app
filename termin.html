@@ -1,1 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termine</title>
 
+<style>
+body{
+font-family:-apple-system;
+background:#0b0b0c;
+color:white;
+margin:0;
+}
+
+.header{
+text-align:center;
+font-size:28px;
+font-weight:bold;
+margin-top:20px;
+position:relative;
+}
+
+.logo{
+position:absolute;
+right:15px;
+top:0;
+height:50px;
+}
+
+.form{
+padding:15px;
+}
+
+.row{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
+.field{
+flex:1;
+padding:14px;
+border-radius:14px;
+border:none;
+background:#1c1c1f;
+color:white;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:16px;
+border-radius:14px;
+border:none;
+margin-top:10px;
+background:#007aff;
+color:white;
+font-size:16px;
+}
+
+.list{
+padding:15px;
+}
+
+.card{
+background:#1c1c1f;
+padding:15px;
+border-radius:14px;
+margin-bottom:10px;
+}
+
+.status{
+margin-top:5px;
+font-size:14px;
+opacity:0.7;
+}
+
+.actions{
+display:flex;
+gap:8px;
+margin-top:10px;
+}
+
+.actions button{
+flex:1;
+padding:10px;
+font-size:14px;
+}
+
+.ok{background:#34c759;}
+.cancel{background:#ff3b30;}
+.edit{background:#ff9500;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+Termine
+<img src="logo.PNG" class="logo">
+</div>
+
+<div class="form">
+
+<div class="row">
+<input id="vorname" class="field" placeholder="Vorname">
+<input id="nachname" class="field" placeholder="Nachname">
+</div>
+
+<div class="row">
+<input id="datum" class="field" type="date">
+<input id="zeit" class="field" type="time">
+</div>
+
+<input id="dienst" class="field" placeholder="Dienstleistung">
+
+<button onclick="save()">Termin speichern</button>
+
+</div>
+
+<div id="list" class="list"></div>
+
+<script>
+
+let termine = JSON.parse(localStorage.getItem("termine")||"[]");
+
+function save(){
+
+let vor = document.getElementById("vorname").value.trim();
+let nach = document.getElementById("nachname").value.trim();
+let datum = document.getElementById("datum").value;
+let zeit = document.getElementById("zeit").value;
+let dienst = document.getElementById("dienst").value;
+
+if(!vor || !nach || !datum || !zeit || !dienst) return;
+
+termine.push({
+id:Date.now(),
+vor,
+nach,
+datum,
+zeit,
+dienst,
+status:"Aktiv"
+});
+
+localStorage.setItem("termine",JSON.stringify(termine));
+
+clear();
+render();
+}
+
+function render(){
+
+let l = document.getElementById("list");
+l.innerHTML="";
+
+termine.sort((a,b)=> (a.datum+a.zeit).localeCompare(b.datum+b.zeit));
+
+termine.forEach(t=>{
+
+let d = document.createElement("div");
+d.className="card";
+
+d.innerHTML=`
+<b>${t.vor} ${t.nach}</b><br>
+${t.datum} - ${t.zeit}<br>
+${t.dienst}
+<div class="status">${t.status}</div>
+
+<div class="actions">
+<button class="edit" onclick="edit(${t.id})">Ändern</button>
+<button class="cancel" onclick="cancel(${t.id})">Storno</button>
+<button class="ok" onclick="done(${t.id})">Erledigt</button>
+</div>
+`;
+
+l.appendChild(d);
+
+});
+}
+
+function cancel(id){
+termine = termine.map(t=> t.id===id ? {...t,status:"Storniert"} : t);
+localStorage.setItem("termine",JSON.stringify(termine));
+render();
+}
+
+function done(id){
+termine = termine.map(t=> t.id===id ? {...t,status:"Erledigt"} : t);
+localStorage.setItem("termine",JSON.stringify(termine));
+render();
+}
+
+function edit(id){
+let t = termine.find(x=>x.id===id);
+
+document.getElementById("vorname").value=t.vor;
+document.getElementById("nachname").value=t.nach;
+document.getElementById("datum").value=t.datum;
+document.getElementById("zeit").value=t.zeit;
+document.getElementById("dienst").value=t.dienst;
+
+termine = termine.filter(x=>x.id!==id);
+localStorage.setItem("termine",JSON.stringify(termine));
+
+render();
+}
+
+function clear(){
+document.getElementById("vorname").value="";
+document.getElementById("nachname").value="";
+document.getElementById("datum").value="";
+document.getElementById("zeit").value="";
+document.getElementById("dienst").value="";
+}
+
+render();
+
+</script>
+
+</body>
+</html>
